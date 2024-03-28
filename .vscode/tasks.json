@@ -34,6 +34,14 @@
                 "isDefault": true
             },
             "label": "tsc: build - tsconfig.json"
-        }
+        },
+        {
+            "command": "${command:extension.liveServer.goOnline}",
+            "label": "LiveServer autostart",
+            "group": "build",
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
     ]
 }
