@@ -1,0 +1,17 @@
+{
+    "files.eol": "\n",
+    "javascript.format.semicolons": "remove",
+    "typescript.format.semicolons": "remove",
+    // for native browser imports
+    "javascript.preferences.importModuleSpecifierEnding": "js",
+    // for native browser imports
+    "typescript.preferences.importModuleSpecifierEnding": "js",
+    // "typescript.tsdk": "node_modules/typescript/lib", - may be necessary if VSCode uses native/global tsdk
+    // windows task manager fix
+    "terminal.integrated.automationProfile.windows": {
+        "path": "C:/Windows/System32/cmd.exe"
+    },
+    "task.allowAutomaticTasks": "on",
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": true,
+}
