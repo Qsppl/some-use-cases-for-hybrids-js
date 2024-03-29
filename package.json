@@ -7,11 +7,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "live-server --verbose",
-    "postinstall": "live-server --verbose"
+    "tsc-watch": "npx tsc --watch",
+    "postinstall": "concurrently --kill-others \"npm run serve\" \"npm run tsc-watch\""
   },
   "author": "Tomokoo",
   "license": "ISC",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "live-server": "^1.2.2",
     "typescript": "^5.4.3"
   },
