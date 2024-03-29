@@ -6,7 +6,7 @@
   "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "live-server --verbose",
+    "serve": "live-server pages/example",
     "tsc-watch": "npx tsc --watch",
     "postinstall": "concurrently --kill-others \"npm run serve\" \"npm run tsc-watch\""
   },
