@@ -1,4 +1,4 @@
-import { ModelIdentifier } from "/node_modules/hybrids/types/index.js"
+import { ModelIdentifier } from 'https://esm.sh/hybrids@8.2.14'
 
 type AllowedValueType<PropertyType> = PropertyType extends { id: ModelIdentifier }
     ? PropertyType | PropertyType['id'] | undefined
