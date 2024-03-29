@@ -1,10 +1,11 @@
-import { Model, StorageValues, store } from 'https://esm.sh/hybrids@8.2.14'
+import { Model, ModelIdentifier, StorageValues, store } from 'https://esm.sh/hybrids@8.2.14'
 
-const FirstStoreSource: { [key: number]: StorageValues<IFirst> } = {
-    0: { id: '0', content: 'qweqwe', creationDatetime: 1711014498391 },
-    1: { id: '1', creationDatetime: 1711014651455 },
-    2: { id: '2', content: 'swswswsws', creationDatetime: 1711014682503 },
-}
+let autoincrement = 2
+const source = new Map<ModelIdentifier, StorageValues<IFirst>>([
+    ["0", { id: '0', content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', creationDatetime: 1711014498391 }],
+    ["1", { id: '1', creationDatetime: 1711014651455 }],
+    ["2", { id: '2', content: 'Nulla ultricies enim dui, quis semper massa elementum ac.', creationDatetime: 1711014682503 }],
+])
 
 export interface IFirst {
     id: string
@@ -14,27 +15,36 @@ export interface IFirst {
 
 export const FirstStore: Model<IFirst> = {
     id: true,
-    content: 'default content of first model',
+    content: 'Lorem ipsum dolor.',
     creationDatetime: NaN,
     [store.connect]: {
-        list: (id) => [...Object.values(FirstStoreSource)],
-        get: (id) => FirstStoreSource[Number(id)] ?? null,
+        list: () => [...source.values()],
+        get: (id) => source.get(id) ?? null,
         set: (id, values) => {
-            if (id === undefined && values) {
-                // create
-                const autoincrementedId = Object.values(FirstStoreSource).length
-                FirstStoreSource[autoincrementedId] = {
+            if (!id && values) { // create
+                const newModelId = String(++autoincrement)
+                source.set(newModelId, {
                     ...values,
-                    id: String(autoincrementedId),
-                    creationDatetime: Number(new Date()),
-                }
-                return FirstStoreSource[autoincrementedId]
+                    id: newModelId,
+                    creationDatetime: Number(new Date)
+                })
+                return source.get(newModelId) ?? null
             }
 
-            if (!isNaN(Number(id)) && values) {
-                // update
-                FirstStoreSource[Number(id)] = { ...values }
-                return FirstStoreSource[Number(id)]
+            if (id && values) { // update
+                const lastSourceValue = source.get(id)
+                if (!lastSourceValue) throw new Error()
+
+                source.set(id, { ...lastSourceValue, ...values })
+
+                const newValue = source.get(id)
+                if (!newValue) throw new Error()
+                return newValue
+            }
+
+            if (id && !values) { // delete
+                source.delete(id)
+                return source.get(id) ?? null
             }
 
             throw new Error()

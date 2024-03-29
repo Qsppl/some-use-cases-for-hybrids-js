@@ -3,19 +3,18 @@ import setProperty from './set-property.js'
 import { FirstStore, IFirst } from './first.store.js'
 
 function toggleEdit(host: IFirstComponent) {
-    setProperty(host, 'draft', host.source)
-    host.edit = true
+    host.edit = !host.edit
+    if (host.edit) setProperty(host, 'draft', host.source)
 }
 
-async function submit(host: IFirstComponent) {
+export async function submit(host: IFirstComponent) {
     const source = await store.submit(host.draft)
-    store.clear([FirstStore])
     if (host.hold) host.sourceId = source.id
-    setProperty(host, 'draft', undefined)
-    host.edit = false
+    toggleEdit(host)
+    return source
 }
 
-function clear(host: IFirstComponent) {
+export function clear(host: IFirstComponent) {
     if (!host.source) setProperty(host, 'draft', undefined)
     else store.set(host.draft, host.source)
 }
@@ -32,7 +31,7 @@ export interface IFirstComponent extends HTMLElement {
 export default define<IFirstComponent>({
     tag: 'first-component',
     sourceId: {
-        set: (host, value: undefined | string, lastValue) => {
+        set: (host, value: undefined | string) => {
             if (value !== undefined) setProperty(host, 'draft', value)
             return value
         },
@@ -47,31 +46,68 @@ export default define<IFirstComponent>({
     hold: false,
     driven: false,
     content: ({ sourceId, source, draft, edit, driven }) => html`
-      <template layout="column gap">
-          <span style="font-size: 0.75em; line-height: 1em; background-color: #000000b0; padding: 0 .5rem;">first-model-form [${sourceId || ' '}]</span>
-          ${edit ? html`
-          <div style="padding: 0 .5rem .5rem;">
-              <input value="${draft.content}" oninput="${html.set(draft, 'content')}" />
-              <button
-                  type="button"
-                  onclick=${submit}
-                  disabled=${(source && store.pending(source)) || (!source && driven)
-            }
-              >Save</button>
-              <button
-                  type="button"
-                  onclick=${clear}
-                  disabled=${source && store.pending(source)}
-              >Clear</button>
-          </div>
-          ` : html`
-          <div style="padding: 0 .5rem .5rem;">
-              ${source && store.ready(source) && html`
-              <span>${source.content}</span>
-              `}
-              <button type="button" onclick="${toggleEdit}">Edit</button>
-          </div>
-          `}
-      </template>
-`,
+    <template layout="column gap">
+        <div style="font-size: 0.75em; line-height: 1em; background-color: #000000b0; padding: 0 0 0 .5rem; display: flex; align-items: center;">
+            <span style="flex-grow: 1;">first-model-form [${sourceId || ' '}]</span>
+
+            ${edit ? html`
+            <button
+                class="aligned"
+                type="button"
+                onclick=${submit}
+                disabled=${(source && store.pending(source)) || (!source && driven)}
+            >Save</button>
+
+            ${source && html`
+            <button
+                class="aligned"
+                type="button"
+                onclick=${toggleEdit}
+            >Cancel</button>
+            `}
+
+            <button
+                class="aligned"
+                type="button"
+                onclick=${clear}
+                disabled=${source && store.pending(source)}
+            >Clear</button>
+
+            ` : html`
+            <button
+                class="aligned"
+                type="button"
+                onclick=${toggleEdit}
+            >Edit</button>
+
+            <button
+                class="aligned"
+                type="button"
+                onclick=${html.set(source, null)}
+                disabled=${source && store.pending(source)}
+            >Delete</button>
+            `}
+        </div>
+
+        ${edit ? html`
+        <div style="padding: 0 .5rem .5rem;">
+            <span><b>content:</b> <input value="${draft.content}" oninput="${html.set(draft, 'content')}" /></span>
+
+        </div>
+
+        ` : html`
+        <div style="padding: 0 .5rem .5rem;">
+            ${source && store.ready(source) && html`
+            <span><b>content:</b> ${source && store.ready(source) ? source.content : "---"}</span>
+            `}
+        </div>
+        `}
+    </template>
+    `.css`
+        button.aligned {
+            font-family: monospace;
+            box-sizing: content-box;
+            width: 6ch;
+        }
+    `,
 })
