@@ -84,18 +84,32 @@ export default define<ISecondComponent>({
                       `}
             </div>
 
-            ${edit
-                ? html`
-                      <div style="padding: 0 .5rem .5rem;">
-                          <span><b>color:</b> <input value="${draft.color}" oninput="${html.set(draft, "color")}" /></span>
-
+            <div style="padding: 0 .5rem .5rem;">
+                ${edit
+                    ? html` <span><b>color:</b> <input value="${draft.color}" oninput="${html.set(draft, "color")}" /></span> `
+                    : html` <span><b>color:</b> ${source && store.ready(source) ? source.color : "---"}</span> `}
+                ${edit
+                    ? html`
                           <details open style="margin: 1em 0;">
                               <summary style="font-family: monospace;">(property) ISecond.relatedModel?: IFirst | undefined</summary>
                               <ul style="margin: unset;">
                                   <li><first-component related-item source-id=${draft.relatedModel?.id} hold driven></first-component></li>
                               </ul>
                           </details>
-
+                      `
+                    : source &&
+                      store.ready(source) &&
+                      source.relatedModel &&
+                      html`
+                          <details open style="margin: 1em 0;">
+                              <summary style="font-family: monospace;">(property) ISecond.relatedModel?: IFirst | undefined</summary>
+                              <ul style="margin: unset;">
+                                  <li><first-component related-item source-id=${source.relatedModel.id} hold driven></first-component></li>
+                              </ul>
+                          </details>
+                      `}
+                ${edit
+                    ? html`
                           <details open style="margin: 1em 0;">
                               <summary style="font-family: monospace;">(property) ISecond.relatedModels: IFirst[]</summary>
                               <ul style="margin: unset;">
@@ -110,56 +124,25 @@ export default define<ISecondComponent>({
                                   )}
 
                                   <li>
-                                      <first-component style="flex-grow: 1;" related-list-item hold driven></first-component>
-
-                                      <button style="display: block;margin-left: auto;margin-bottom: 1em;" type="button">Delete item</button>
-                                  </li>
-
-                                  <li>
-                                      <first-component style="flex-grow: 1;" related-list-item hold driven></first-component>
-
-                                      <button style="display: block;margin-left: auto;margin-bottom: 1em;" type="button">Delete item</button>
-                                  </li>
-
-                                  <li>
                                       <button type="button" onclick=${addRelatedModel} disabled=${source && store.pending(source)}>Add related model</button>
                                   </li>
                               </ul>
                           </details>
-                      </div>
-                  `
-                : html`
-                      <div style="padding: 0 .5rem .5rem;">
-                          <span><b>color:</b> ${source && store.ready(source) ? source.color : "---"}</span>
-
-                          ${source &&
-                          store.ready(source) &&
-                          source.relatedModel &&
-                          html`
-                              <details open style="margin: 1em 0;">
-                                  <summary style="font-family: monospace;">(property) ISecond.relatedModel?: IFirst | undefined</summary>
-                                  <ul style="margin: unset;">
-                                      <li><first-component related-item source-id=${source.relatedModel.id} hold driven></first-component></li>
-                                  </ul>
-                              </details>
-                          `}
-                          ${source &&
-                          store.ready(source) &&
-                          source.relatedModels.length > 0 &&
-                          html`
-                              <details open style="margin: 1em 0;">
-                                  <summary style="font-family: monospace;">(property) ISecond.relatedModels: IFirst[]</summary>
-                                  <ul style="margin: unset;">
-                                      ${source.relatedModels.map((model) =>
-                                          html` <li><first-component related-list-item source-id=${model?.id} hold driven></first-component></li> `.key(
-                                              model.id
-                                          )
-                                      )}
-                                  </ul>
-                              </details>
-                          `}
-                      </div>
-                  `}
+                      `
+                    : source &&
+                      store.ready(source) &&
+                      source.relatedModels.length > 0 &&
+                      html`
+                          <details open style="margin: 1em 0;">
+                              <summary style="font-family: monospace;">(property) ISecond.relatedModels: IFirst[]</summary>
+                              <ul style="margin: unset;">
+                                  ${source.relatedModels.map((model) =>
+                                      html` <li><first-component related-list-item source-id=${model?.id} hold driven></first-component></li> `.key(model.id)
+                                  )}
+                              </ul>
+                          </details>
+                      `}
+            </div>
         </template>
     `.css`
         button.aligned {
