@@ -5,7 +5,6 @@
         "rvest.vs-code-prettier-eslint",
         "dbaeumer.vscode-eslint",
         "bashmish.es6-string-css",
-        "tobermory.es6-string-html",
-        "yoavbls.pretty-ts-errors"
+        "tobermory.es6-string-html"
     ]
 }

@@ -6,7 +6,7 @@
   "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "live-server pages/example",
+    "serve": "live-server pages/example --port=8000",
     "tsc-watch": "npx tsc --watch",
     "postinstall": "concurrently --kill-others \"npm run serve\" \"npm run tsc-watch\""
   },
@@ -18,6 +18,6 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
-    "hybrids": "^8.2.14"
+    "hybrids": "^8.2.15"
   }
 }

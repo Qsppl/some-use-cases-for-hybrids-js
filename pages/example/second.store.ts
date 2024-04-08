@@ -1,11 +1,11 @@
-import { Model, ModelIdentifier, StorageValues, store } from 'https://esm.sh/hybrids@8.2.14'
+import { Model, ModelIdentifier, StorageValues, store } from "https://esm.sh/hybrids@8.2.15"
 import { FirstStore, IFirst } from "./first.store.js"
 
 let autoincrement = 2
 const source = new Map<ModelIdentifier, StorageValues<ISecond>>([
-    ["0", { id: "0", relatedModel: '1', creationDatetime: 1711120485090 }],
-    ["1", { id: "1", color: "green", relatedModel: '0', creationDatetime: 1711120562192 }],
-    ["2", { id: "2", color: "orange", creationDatetime: 1711120567576, relatedModels: ['1', '2'] }],
+    ["0", { id: "0", relatedModel: "1", creationDatetime: 1711120485090 }],
+    ["1", { id: "1", color: "green", relatedModel: "0", creationDatetime: 1711120562192 }],
+    ["2", { id: "2", color: "orange", creationDatetime: 1711120567576, relatedModels: ["1", "2"] }],
 ])
 
 export interface ISecond {
@@ -26,17 +26,19 @@ export const SecondStore: Model<ISecond> = {
         list: () => [...source.values()],
         get: (id) => source.get(id) ?? null,
         set: (id, values) => {
-            if (!id && values) { // create
+            if (!id && values) {
+                // create
                 const newModelId = String(++autoincrement)
                 source.set(newModelId, {
                     ...values,
                     id: newModelId,
-                    creationDatetime: Number(new Date)
+                    creationDatetime: Number(new Date()),
                 })
                 return source.get(newModelId) ?? null
             }
 
-            if (id && values) { // update
+            if (id && values) {
+                // update
                 const lastSourceValue = source.get(id)
                 if (!lastSourceValue) throw new Error()
 
@@ -47,13 +49,14 @@ export const SecondStore: Model<ISecond> = {
                 return newValue
             }
 
-            if (id && !values) { // delete
+            if (id && !values) {
+                // delete
                 source.delete(id)
                 return source.get(id) ?? null
             }
 
             throw new Error()
         },
-        loose: true
+        loose: true,
     },
 }
