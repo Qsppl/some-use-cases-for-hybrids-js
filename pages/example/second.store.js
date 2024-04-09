@@ -15,7 +15,19 @@ export const SecondStore = {
     [store.connect]: {
         list: () => [...source.values()],
         get: (id) => source.get(id) ?? null,
-        set: (id, values) => {
+        set: async (id, values) => {
+            let relatedModel;
+            if (values?.relatedModel) {
+                const { id, ...modelValues } = values.relatedModel;
+                relatedModel = await store.set(FirstStore, modelValues);
+            }
+            let relatedModels;
+            if (values?.relatedModels) {
+                relatedModels = await Promise.all(values.relatedModels.map((model) => {
+                    const { id, ...modelValues } = model;
+                    return store.set(FirstStore, modelValues);
+                }));
+            }
             if (!id && values) {
                 // create
                 const newModelId = String(++autoincrement);
@@ -23,6 +35,8 @@ export const SecondStore = {
                     ...values,
                     id: newModelId,
                     creationDatetime: Number(new Date()),
+                    relatedModel: relatedModel?.id,
+                    relatedModels: relatedModels?.map((model) => model.id),
                 });
                 return source.get(newModelId) ?? null;
             }
@@ -31,7 +45,12 @@ export const SecondStore = {
                 const lastSourceValue = source.get(id);
                 if (!lastSourceValue)
                     throw new Error();
-                source.set(id, { ...lastSourceValue, ...values });
+                source.set(id, {
+                    ...lastSourceValue,
+                    ...values,
+                    relatedModel: relatedModel?.id,
+                    relatedModels: relatedModels?.map((model) => model.id),
+                });
                 const newValue = source.get(id);
                 if (!newValue)
                     throw new Error();

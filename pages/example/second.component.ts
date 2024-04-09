@@ -1,154 +1,175 @@
-import { children, define, html, store } from "https://esm.sh/hybrids@8.2.15"
+import { define, html, store } from "https://esm.sh/hybrids@8.2.15"
 import setProperty from "./set-property.js"
 import { ISecond, SecondStore } from "./second.store.js"
-import firstComponet, { IFirstComponent, submit as submitFirstForm } from "./first.componet.js"
+import { IFirst } from "./first.store.js"
 
-function toggleEdit(host: ISecondComponent) {
-    host.edit = !host.edit
-    if (host.edit) setProperty(host, "draft", host.source)
-}
-
-async function submit(host: ISecondComponent) {
-    const sourceId = (await store.submit(host.draft)).id
-    if (host.hold) host.sourceId = sourceId
-
-    const relatedModel = host.relatedModelForm && (await submitFirstForm(host.relatedModelForm))
-    await store.set(store.get(SecondStore, sourceId), { relatedModel })
-
-    const relatedModels = await Promise.all(host.relatedModelsForm.map((form) => submitFirstForm(form)))
-    await store.set(store.get(SecondStore, sourceId), { relatedModels })
-
-    toggleEdit(host)
-
-    return host.source
-}
-
-function clear(host: ISecondComponent) {
+function resetDraft(host: ISecondComponent) {
     if (!host.source) setProperty(host, "draft", undefined)
     else store.set(host.draft, host.source)
 }
 
-function addRelatedModel() {}
+async function submit(host: ISecondComponent) {
+    const related = host.draft.relatedModel && (await store.submit(host.draft.relatedModel))
+    const source = await store.submit(host.draft)
+    if (host.hold) host.source = source
+
+    resetDraft(host)
+    host.edit = false
+}
+
+function addRelated(model: ISecond) {
+    store.set(model, {
+        relatedModels: [...model.relatedModels, {}],
+    })
+}
+
+function deleteRelated(model: ISecond, related: IFirst) {
+    store.set(model, {
+        relatedModels: model.relatedModels.filter((model) => model !== related),
+    })
+}
 
 export interface ISecondComponent extends HTMLElement {
-    sourceId?: string
-    source: undefined | ISecond
+    source?: ISecond
     draft: ISecond
     edit: boolean
     hold: boolean
-    driven: boolean
-    subModelsForms: IFirstComponent[]
-    relatedModelForm?: IFirstComponent
-    relatedModelsForm: IFirstComponent[]
+    connect: undefined
 }
 
 export default define<ISecondComponent>({
     tag: "second-component",
-    sourceId: {
-        set: (host, value: undefined | string) => {
-            if (value !== undefined) setProperty(host, "draft", value)
-            return value
-        },
-        get: (host, lastValue) => lastValue,
-    },
-    source: store(SecondStore, { id: "sourceId" }),
+    source: store(SecondStore),
     draft: store(SecondStore, { draft: true }),
     edit: {
         get: (host, value) => !host.source || value,
-        set: (host, value) => value,
+        set: (host, value, lastValue) => value,
     },
     hold: false,
-    driven: false,
-    subModelsForms: children(firstComponet, { deep: true }),
-    relatedModelForm: ({ subModelsForms }) => subModelsForms.find((component) => component.hasAttribute("related-item")),
-    relatedModelsForm: ({ subModelsForms }) => [...subModelsForms].filter((component) => component.hasAttribute("related-list-item")),
-    content: ({ sourceId, source, draft, edit, driven }) => html`
+    connect: {
+        value: undefined,
+        connect: (host) => {
+            resetDraft(host)
+
+            store.set(host.draft, {
+                relatedModel: {},
+                relatedModels: [...host.draft.relatedModels, {}, {}],
+            })
+        },
+    },
+    content: ({ source, draft, edit }) => html`
         <template layout="column gap">
-            <div style="font-size: 0.75em; line-height: 1em; background-color: #000000b0; padding: 0 0 0 .5rem; display: flex; align-items: center;">
-                <span style="flex-grow: 1;">second-model-form [${sourceId || " "}]</span>
+            <div class="header">
+                <span class="header-placeholder">second-model-form [${source?.id}]</span>
 
                 ${edit
                     ? html`
-                          <button class="aligned" type="button" onclick=${submit} disabled=${(source && store.pending(source)) || (!source && driven)}>
-                              Save
-                          </button>
+                          <button class="aligned" type="button" onclick=${submit} disabled=${source && store.pending(source)}>Save</button>
 
-                          ${source && html` <button class="aligned" type="button" onclick=${toggleEdit}>Cancel</button> `}
+                          ${source && html` <button class="aligned" type="button" onclick=${html.set("edit", !edit)}>Cancel</button> `}
 
-                          <button class="aligned" type="button" onclick=${clear} disabled=${source && store.pending(source)}>Clear</button>
+                          <button class="aligned" type="button" onclick=${resetDraft} disabled=${source && store.pending(source)}>Clear</button>
                       `
                     : html`
-                          <button class="aligned" type="button" onclick=${toggleEdit}>Edit</button>
+                          <button class="aligned" type="button" onclick=${html.set("edit", !edit)}>Edit</button>
 
                           <button class="aligned" type="button" onclick=${html.set(source, null)} disabled=${source && store.pending(source)}>Delete</button>
                       `}
             </div>
 
-            <div style="padding: 0 .5rem .5rem;">
-                ${edit
-                    ? html` <span><b>color:</b> <input value="${draft.color}" oninput="${html.set(draft, "color")}" /></span> `
-                    : html` <span><b>color:</b> ${source && store.ready(source) ? source.color : "---"}</span> `}
-                ${edit
-                    ? html`
-                          <details open style="margin: 1em 0;">
-                              <summary style="font-family: monospace;">(property) ISecond.relatedModel?: IFirst | undefined</summary>
-                              <ul style="margin: unset;">
-                                  <li><first-component related-item source-id=${draft.relatedModel?.id} hold driven></first-component></li>
-                              </ul>
-                          </details>
-                      `
-                    : source &&
-                      store.ready(source) &&
-                      source.relatedModel &&
-                      html`
-                          <details open style="margin: 1em 0;">
-                              <summary style="font-family: monospace;">(property) ISecond.relatedModel?: IFirst | undefined</summary>
-                              <ul style="margin: unset;">
-                                  <li><first-component related-item source-id=${source.relatedModel.id} hold driven></first-component></li>
-                              </ul>
-                          </details>
-                      `}
-                ${edit
-                    ? html`
-                          <details open style="margin: 1em 0;">
-                              <summary style="font-family: monospace;">(property) ISecond.relatedModels: IFirst[]</summary>
-                              <ul style="margin: unset;">
-                                  ${draft.relatedModels.map((model) =>
+            <div class="content">
+                <span>
+                    <b>color:</b>
+                    ${edit
+                        ? html` <input value="${draft.color}" oninput="${html.set(draft, "color")}" /> `
+                        : html` ${source && store.ready(source) ? source.color : "---"} `}
+                </span>
+                <details open>
+                    <summary>(property) ISecond.relatedModel?: IFirst | undefined</summary>
+                    <ul>
+                        ${edit
+                            ? html` <li><first-component driven related-item draft=${draft.relatedModel} hold driven></first-component></li> `
+                            : source &&
+                              store.ready(source) &&
+                              source.relatedModel &&
+                              html` <li><first-component driven related-item source=${source.relatedModel} hold driven></first-component></li> `}
+                    </ul>
+                </details>
+                <details open>
+                    <summary>(property) ISecond.relatedModels: IFirst[]</summary>
+                    <ul>
+                        ${edit
+                            ? html`
+                                  ${draft.relatedModels.map((relatedDraft) =>
                                       html`
                                           <li>
-                                              <first-component style="flex-grow: 1;" related-list-item hold driven></first-component>
+                                              <first-component driven draft=${relatedDraft} hold driven></first-component>
 
-                                              <button style="display: block;margin-left: auto;margin-bottom: 1em;" type="button">Delete item</button>
+                                              <button type="button" class="align-right" onclick=${() => deleteRelated(draft, relatedDraft)}>Delete item</button>
                                           </li>
-                                      `.key(model.id)
+                                      `.key(relatedDraft)
                                   )}
 
                                   <li>
-                                      <button type="button" onclick=${addRelatedModel} disabled=${source && store.pending(source)}>Add related model</button>
+                                      <button type="button" onclick=${() => addRelated(draft)} disabled=${source && store.pending(source)}>
+                                          Add related model
+                                      </button>
                                   </li>
-                              </ul>
-                          </details>
-                      `
-                    : source &&
-                      store.ready(source) &&
-                      source.relatedModels.length > 0 &&
-                      html`
-                          <details open style="margin: 1em 0;">
-                              <summary style="font-family: monospace;">(property) ISecond.relatedModels: IFirst[]</summary>
-                              <ul style="margin: unset;">
-                                  ${source.relatedModels.map((model) =>
-                                      html` <li><first-component related-list-item source-id=${model?.id} hold driven></first-component></li> `.key(model.id)
-                                  )}
-                              </ul>
-                          </details>
-                      `}
+                              `
+                            : source &&
+                              store.ready(source) &&
+                              source.relatedModels.length > 0 &&
+                              source.relatedModels.map((model) =>
+                                  html` <li><first-component driven related-list-item source=${model} hold driven></first-component></li> `.key(model)
+                              )}
+                    </ul>
+                </details>
             </div>
         </template>
     `.css`
-        button.aligned {
+        .header {
+            font-size: 0.75em;
+            line-height: 1em;
+            background-color: #000000b0;
+            padding: 0 0 0 .5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-placeholder {
+            flex-grow: 1;
+        }
+
+        .content {
+            padding: 0 .5rem .5rem;
+        }
+
+        details {
+            margin: 1em 0;
+        }
+
+        summary,
+        .header,
+        button {
             font-family: monospace;
+        }
+
+        .aligned {
             box-sizing: content-box;
             width: 6ch;
+        }
+
+        ul {
+            margin: unset;
+        }
+
+        li {
+            margin-bottom: 1em;
+        }
+
+        .align-right {
+            display: block;
+            margin-left: auto;
         }
     `,
 })

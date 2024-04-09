@@ -3,6 +3,7 @@ import { FirstStore, IFirst } from "./first.store.js"
 import { ISecond, SecondStore } from "./second.store.js"
 import "./first.componet.js"
 import "./second.component.js"
+import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/components/divider/divider.js"
 
 interface ITestingLayoutComponent extends HTMLElement {
     firstModels: IFirst[]
@@ -19,45 +20,55 @@ export default define<ITestingLayoutComponent>({
     lastCreatedSecondModel: ({ secondModels }) =>
         store.ready(...secondModels) && [...secondModels].sort((a, b) => a.creationDatetime - b.creationDatetime).pop(),
     content: ({ firstModels, secondModels, lastCreatedFirstModel, lastCreatedSecondModel }) => html`
-        <h2>First Model <code style="display: inline-block;"> { content: string, creationDatetime: number } </code></h2>
+        <h2>First Model <code> { content: string, creationDatetime: number } </code></h2>
 
-        <div style="display: flex; flex-direction: row;">
-            <div style="flex-basis: 33.33%; border-right: solid gray 2px; padding: 1em;">
+        <div class="container">
+            <div>
                 <h3>creation of new IFirst</h3>
                 <first-component></first-component>
 
                 <h3>create model in this place</h3>
                 <first-component hold></first-component>
             </div>
-            <div style="flex-basis: 33.33%; border-right: solid gray 2px; padding: 1em;">
+
+            <sl-divider vertical></sl-divider>
+
+            <div>
                 <h3>IFirst list</h3>
-                ${store.ready(...firstModels) && firstModels.map((model) => html` <first-component source-id=${model.id}></first-component> `.key(model.id))}
+                ${store.ready(...firstModels) && firstModels.map((model) => html` <first-component source=${model}></first-component> `.key(model))}
             </div>
-            <div style="flex-basis: 33.33%; padding: 1em;">
+
+            <sl-divider vertical></sl-divider>
+
+            <div>
                 <h3>last added model</h3>
-                ${lastCreatedFirstModel &&
-                [lastCreatedFirstModel].map((model) => html` <first-component source-id=${model.id}></first-component> `.key(model.id))}
+                ${lastCreatedFirstModel && [lastCreatedFirstModel].map((model) => html` <first-component source=${model}></first-component> `.key(model))}
             </div>
         </div>
 
-        <h2>Second Model <code style="display: inline-block;"> { related: IFirst, creationDatetime: number } </code></h2>
+        <h2>Second Model <code> { related: IFirst, creationDatetime: number } </code></h2>
 
-        <div style="display: flex; flex-direction: row;">
-            <div style="flex-basis: 33.33%; border-right: solid gray 2px; padding: 1em;">
+        <div class="container">
+            <div>
                 <h3>creation of new models</h3>
                 <second-component></second-component>
 
                 <h3>create model in this place</h3>
                 <second-component hold></second-component>
             </div>
-            <div style="flex-basis: 33.33%; border-right: solid gray 2px; padding: 1em;">
+
+            <sl-divider vertical></sl-divider>
+
+            <div>
                 <h3>models list</h3>
-                ${store.ready(...secondModels) && secondModels.map((model) => html` <second-component source-id=${model.id}></second-component> `.key(model))}
+                ${store.ready(...secondModels) && secondModels.map((model) => html` <second-component source=${model}></second-component> `.key(model))}
             </div>
-            <div style="flex-basis: 33.33%; padding: 1em;">
+
+            <sl-divider vertical></sl-divider>
+
+            <div>
                 <h3>last added model</h3>
-                ${lastCreatedSecondModel &&
-                [lastCreatedSecondModel].map((model) => html` <second-component source-id=${model.id}></second-component> `.key(model))}
+                ${lastCreatedSecondModel && [lastCreatedSecondModel].map((model) => html` <second-component source=${model}></second-component> `.key(model))}
             </div>
         </div>
     `.css`
@@ -65,6 +76,19 @@ export default define<ITestingLayoutComponent>({
         second-component {
             margin: 0.5em 0;
             background-color: #ffffff20;
+        }
+
+        .container {
+            display: flex; flex-direction: row;
+        }
+
+        .container > div {
+            flex-basis: 33.33%;
+            padding: 1em;
+        }
+
+        code {
+            display: inline-block;
         }
     `,
 })
