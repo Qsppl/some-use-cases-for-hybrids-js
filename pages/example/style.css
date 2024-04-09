@@ -88,6 +88,14 @@ aside,
     padding: 5px 15px;
 }
 
+button {
+    color: darkslategray;
+}
+
+button:disabled {
+    color: darkgray;
+}
+
 code {
     display: block;
     font-size: 0.75em;
