@@ -2,8 +2,6 @@
     "recommendations": [
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
-        "rvest.vs-code-prettier-eslint",
-        "dbaeumer.vscode-eslint",
         "bashmish.es6-string-css",
         "tobermory.es6-string-html"
     ]
